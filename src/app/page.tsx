@@ -5,11 +5,10 @@ import Link from "next/link";
 export default function Home() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-0">
-      <div className="relative min-h-screen">
       {/* Imagem de fundo */}
       <div className="absolute inset-0">
         <Image 
-          src="/computacao-background.png" // Caminho para sua imagem
+          src="/computacao-background.webp" // Caminho para sua imagem
           alt="Background do curso de Ciência da Computação"
           layout="fill"
           objectFit="cover"
@@ -47,8 +46,6 @@ export default function Home() {
         {/* Espaçamento no rodapé (opcional) */}
         <div />
       </div>
-    </div>
-
     </main>
   );
 }
