@@ -7,11 +7,11 @@ import { auth, db } from '../../src/config/firebase.config';
 declare module 'next-auth'{
   interface Session {
     user: {
-      role?: string | null;
+      role?: any;
       name?: string | null;
       email?: string | null;
       image?: string | null;
-      id?: string | null;
+      id?: any;
       
     }
   }
@@ -74,12 +74,13 @@ export const authOptions: NextAuthOptions = {
         return session;
       },
       async jwt({ token, user }) {
-        // Adicione as informações do usuário ao token JWT
+        let userData:any = user;
+
         if (user) {
           token.id = user.id;
           token.email = user.email;
           token.name = user.name;
-          token.role = user.role;
+          token.role = userData.role;
         }
         return token;
       },

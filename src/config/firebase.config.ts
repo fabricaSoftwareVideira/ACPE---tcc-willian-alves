@@ -1,11 +1,11 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, Auth } from 'firebase/auth';
 import { getFirestore, Firestore } from 'firebase/firestore';
-import { getStorage, Storage } from 'firebase/storage';
+import { getStorage,  } from 'firebase/storage';
 
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY as string,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN as string,
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API as string,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_DOMAIN as string,
   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID as string,
   storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET as string,
   messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID as string,
@@ -15,4 +15,4 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 export const auth: Auth = getAuth(app);
 export const db: Firestore = getFirestore(app);
-export const storage: Storage = getStorage(app);
+export const storage: any = getStorage(app);

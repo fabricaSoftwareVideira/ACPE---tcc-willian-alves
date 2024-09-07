@@ -4,45 +4,9 @@ import ResponsiveMenu from '@/components/responsive-menu';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
-import { collection, query, where, getDocs, addDoc, serverTimestamp } from "firebase/firestore";
-import { db, storage } from '@/config/firebase.config';
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import { Container, Icon, Plus, FileBadge } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import {
-  Drawer,
-  DrawerClose,
-  DrawerContent,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger,
-} from "@/components/ui/drawer"
-import { useForm, SubmitHandler } from "react-hook-form";
+import { collection, query, where, getDocs } from "firebase/firestore";
+import { db, } from '@/config/firebase.config';
 import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "../../components/ui/form";
-import { Input } from "../../components/ui/input";
-import { calculatePdfHash, getRandomFileName } from '@/lib/utils';
-import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { LoadingSpinner } from '@/components/ui/loader';
 import { Progress } from "@/components/ui/progress"
@@ -50,66 +14,19 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import withAuthorization from '@/components/with-authorization';
 
-
-
-const formSchema = z.object({
-  description: z.string().min(2, {
-    message: "Descricao é obrigatória",
-  }),
-  file: z.instanceof(File)
-    .refine((file) => file.size < 5 * 1024 * 1024, { // 5MB max size
-      message: "O arquivo deve ter menos de 5MB.",
-    }),
-  // .refine((file) => file.type.startsWith("pdf/"), {
-  //   message: "O arquivo deve ser uma PDF.",
-  // }),
-  workload: z.string().min(1, { message: "Carga horaria é obrigatória" }),
-
-});
-
-interface FileValidation {
-  description: string;
-  workload: string;
-  hashFile: string;
-  status: string;
-  userId: string;
-  pathFile: string;
-  createdAt: string;
-}
-
-const statuses = {
-  "pending": "Pendente",
-  "rejected": "Rejeitado",
-  "approved": "Aprovado",
-  "processing": "Processando",
-}
-const statusesColors = {
-  "pending": "",
-  "rejected": "destructive",
-  "approved": "outline",
-  "processing": "secondary",
-}
 const ProgressPage = () => {
-  const [loading, setLoading] = useState(false);
   const [myWorkload, setMyWorkload] = useState(0);
-  const [drawerVisibleForm, setDrawerVisibleForm] = useState(false);
-  const [drawerVisibleView, setDrawerVisibleView] = useState(false);
-  const [pdfUrl, setPdfUrl] = useState(null);
-  const [pdfPath, setPdfPath] = useState(null);
-  const [error, setError] = useState<string | null>(null);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const { data: session, status } = useSession();
-  const router = useRouter();
   const { toast } = useToast();
 
 
   useEffect(() => {
-    async function getAllFiles() {
+    async function getUserInfo() {
       if (!session) {
         return;
       }
@@ -118,11 +35,8 @@ const ProgressPage = () => {
         const q = query(collection(db, "files"), where("userId", "==", session.user.id));
 
         const querySnapshot = await getDocs(q);
-        console.log(querySnapshot);
 
         if (querySnapshot.empty) {
-          console.log("snapshot empty");
-
           return;
         }
 
@@ -144,9 +58,9 @@ const ProgressPage = () => {
         console.error("Erro ao obter lista de arquivos:", error);
       }
     }
-    getAllFiles();
+    getUserInfo();
 
-  }, [session, status, drawerVisibleForm]);
+  }, [session, status]);
 
 
   if (status === 'loading' || !session) {
@@ -181,4 +95,4 @@ const ProgressPage = () => {
   );
 };
 
-export default ProgressPage;
+export default withAuthorization(ProgressPage, ["common"]);

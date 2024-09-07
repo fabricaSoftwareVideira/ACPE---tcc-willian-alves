@@ -28,6 +28,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { LoadingSpinner } from "@/components/ui/loader";
 
 const formSchema = z.object({
   fullname: z.string().min(2, {
@@ -89,9 +90,8 @@ export default function RegisterPage() {
     } catch (error) {
       // Tratar erros gerais
       toast({
-        type: 'destructive',
+        variant: 'destructive',
         title: 'Falha ao registrar',
-        description: error,
       });
       setLoading(false)
     }
