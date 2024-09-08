@@ -63,66 +63,70 @@ const DashboardPage = () => {
 
 
   if (status === 'loading' || !session) {
+    console.log(status, session);
+
     return (
       <div className="w-full h-screen flex justify-center items-center">
         <LoadingSpinner />
       </div>
     );
   } else {
-    <div>
-      <ResponsiveMenu></ResponsiveMenu>
+    return (
+      <div>
+        <ResponsiveMenu></ResponsiveMenu>
 
-      <div className="container mt-5">
-        <div className="flex flex-row justify-between items-center p-3 mb-10 border-b">
-          <h2 className="text-3xl font-semibold tracking-tight first:mt-0">
-            Dashboard
-          </h2>
+        <div className="container mt-5">
+          <div className="flex flex-row justify-between items-center p-3 mb-10 border-b">
+            <h2 className="text-3xl font-semibold tracking-tight first:mt-0">
+              Dashboard
+            </h2>
+          </div>
+          <div className="flex flex-row justify-between w-full space-x-2">
+
+
+            <Card className="w-full">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Usuarios registrados
+                </CardTitle>
+                <User size={18} />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{dashboardData?.qUsers}</div>
+
+              </CardContent>
+            </Card>
+
+            <Card className="w-full">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Arquivos submetidos
+                </CardTitle>
+                <FilePlus size={18} />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{dashboardData?.qFiles}</div>
+
+              </CardContent>
+            </Card>
+            <Card className="w-full">
+              <CardHeader className="flex flex-row items-center justify-between space-y-1 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Arquivos pendentes
+                </CardTitle>
+                <FileClock size={18} />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{dashboardData?.qPendingFiles}</div>
+
+              </CardContent>
+            </Card>
+
+          </div>
+
         </div>
-        <div className="flex flex-row justify-between w-full space-x-2">
-
-
-          <Card className="w-full">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Usuarios registrados
-              </CardTitle>
-              <User size={18} />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{dashboardData?.qUsers}</div>
-
-            </CardContent>
-          </Card>
-
-          <Card className="w-full">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Arquivos submetidos
-              </CardTitle>
-              <FilePlus size={18} />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{dashboardData?.qFiles}</div>
-
-            </CardContent>
-          </Card>
-          <Card className="w-full">
-            <CardHeader className="flex flex-row items-center justify-between space-y-1 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Arquivos pendentes
-              </CardTitle>
-              <FileClock size={18} />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{dashboardData?.qPendingFiles}</div>
-
-            </CardContent>
-          </Card>
-
-        </div>
-
       </div>
-    </div>
+    );
   }
 
 
