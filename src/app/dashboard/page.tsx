@@ -81,7 +81,7 @@ const DashboardPage = () => {
               Dashboard
             </h2>
           </div>
-          <div className="flex flex-row justify-between w-full space-x-2">
+          <div className="flex-row sm:flex-col lg:flex-row justify-center h-full lg:space-x-2 sm:space-y-3">
 
 
             <Card className="w-full">
