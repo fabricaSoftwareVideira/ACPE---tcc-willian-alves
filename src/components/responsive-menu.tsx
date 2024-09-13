@@ -56,6 +56,12 @@ const ResponsiveMenu: React.FC = () => {
                 </Link>
               )}
 
+              {session?.user.role === "admin" && (
+                <Link href="/users" className="text-md">
+                  Usuarios
+                </Link>
+              )}
+
               {/* Link para usuários não admin */}
               {session?.user.role !== "admin" && (
                 <Link href="/files" className="text-md">
@@ -83,6 +89,14 @@ const ResponsiveMenu: React.FC = () => {
 
                 <DropdownMenuContent>
                   <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
+                  {
+                    session?.user.role === "admin" && (
+                      
+                      <DropdownMenuItem onClick={() => router.push("/adminpanel")}>
+                        Painel administrativo
+                      </DropdownMenuItem>
+                    )
+                  }
                   <DropdownMenuSeparator />
 
                   {

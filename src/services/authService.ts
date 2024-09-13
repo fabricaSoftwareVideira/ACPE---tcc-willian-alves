@@ -15,7 +15,6 @@ export const registerUser = async (
   try {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
-    console.log(user);
     
 
     // Adicionar informações adicionais no Firestore

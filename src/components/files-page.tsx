@@ -110,7 +110,6 @@ const FilesPage = () => {
 
     try {
       const snapshot = await uploadBytes(storageRef, file);
-      console.log("Arquivo adicionado!");
       return pathFile;
     } catch (error) {
       console.error("Erro ao upload arquivo:", error);
@@ -132,12 +131,9 @@ const FilesPage = () => {
         return;
       } {
 
-        console.log(values);
-
         if (values.file?.length > 0) {
           let selectedFile = values.file[0];
           const hash = await calculatePdfHash(selectedFile);
-          console.log(hash);
           
           const fileName = await getRandomFileName();
 
@@ -149,7 +145,6 @@ const FilesPage = () => {
           const querySnapshot = await getDocs(q);
 
           if (!querySnapshot.empty) {
-            console.log("Arquivo com hashFile já existe!");
             toast({
               variant: "destructive",
               title: "Ops! Ja existe um arquivo igual ao adicionado.",
@@ -174,7 +169,6 @@ const FilesPage = () => {
               createdAt: serverTimestamp(),
             };
 
-            console.log(fileValidation);
 
             // Add a new document with a generated id.
             const docRef = await addDoc(collection(db, "files"), fileValidation);
@@ -228,10 +222,8 @@ const FilesPage = () => {
         const q = query(collection(db, "files"), where("userId", "==", session.user.id));
 
         const querySnapshot = await getDocs(q);
-        console.log(querySnapshot);
 
         if (querySnapshot.empty) {
-          console.log("snapshot empty");
 
           setFilesList([]);
 

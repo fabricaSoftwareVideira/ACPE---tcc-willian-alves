@@ -38,6 +38,18 @@ export const calculatePdfHash = (file: File): Promise<string> => {
   });
 };
 
+export const generateId = () => {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let autoId = '';
+    
+    for (let i = 0; i < 20; i++) {
+        const randomIndex = Math.floor(Math.random() * chars.length);
+        autoId += chars[randomIndex];
+    }
+
+    return autoId;
+}
+
 export const getRandomFileName = () => {
   var timestamp = new Date().toISOString().replace(/[-:.]/g,"");  
   var random = ("" + Math.random()).substring(2, 8); 

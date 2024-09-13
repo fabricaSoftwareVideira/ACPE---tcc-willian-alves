@@ -68,16 +68,18 @@ export default function LoginPage() {
 
       if (result?.error) {
 
+        (result);
+        
         setLoading(false);
         toast({
           title: 'Erro ao criar sessão',
-          description: result.error,
+          description: "Email ou senha incorretos! Tente novamente.",
           variant: 'destructive',
         })
       } else {
-        toast({
-          title: 'Sessão criada com sucesso',
-        })
+        // toast({
+        //   title: 'Sessão criada com sucesso',
+        // })
         router.push('/dashboard');
       }
     } catch (error: any) {

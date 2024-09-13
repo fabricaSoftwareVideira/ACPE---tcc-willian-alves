@@ -72,7 +72,6 @@ export default function RegisterPage() {
     try {
       // Processa o registro do usuário
       setLoading(true);
-      console.log("Dados do formulário:", values);
 
       let additionalData: AdditionalData = {
         fullname: values.fullname,

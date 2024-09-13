@@ -1,5 +1,4 @@
 "use client";
-import { useToast } from "@/hooks/use-toast";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { ReactNode, useEffect } from "react";
@@ -14,18 +13,12 @@ const withAuthorization = (Component: any, allowedRoles: string[]) => {
     const WrappedComponent = (props: any) => {
         const { data: session, status } = useSession();
         const router = useRouter();
-        const { toast } = useToast();
 
         useEffect(() => {
             if (status === "unauthenticated") {
                 // Redirect to login if unauthenticated
                 router.push("/login");
             } else if (status === "authenticated" && !allowedRoles.includes(session?.user?.role || "")) {
-                toast({
-                    variant: "destructive",
-                    title: "Acesso nao autorizado!",
-                })
-                // Redirect to unauthorized page if role is not allowed
 
                 if (session?.user?.role === "admin") {
                     router.push("/dashboard");
@@ -33,7 +26,7 @@ const withAuthorization = (Component: any, allowedRoles: string[]) => {
                     router.push("/myprogress");
                 }
             }
-        }, [status, session, router, allowedRoles, toast]);
+        }, [status, session, router, allowedRoles]);
 
         // Show a loading state while checking session
         if (status === "loading") return (

@@ -15,7 +15,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { FileClock, FilePlus, User } from 'lucide-react';
+import { ArrowRight, FileClock, FilePlus, User } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const DashboardPage = () => {
   const [dashboardData, setDashboardData] = useState({
@@ -52,7 +53,6 @@ const DashboardPage = () => {
         });
 
         setDashboardData(newData);
-        console.log(newData);
       } catch (error) {
         console.error("Erro ao obter lista de arquivos:", error);
       }
@@ -63,7 +63,6 @@ const DashboardPage = () => {
 
 
   if (status === 'loading' || !session) {
-    console.log(status, session);
 
     return (
       <div className="w-full h-screen flex justify-center items-center">
@@ -81,7 +80,7 @@ const DashboardPage = () => {
               Dashboard
             </h2>
           </div>
-          <div className="flex-row sm:flex-col lg:flex-row justify-center h-full lg:space-x-2 sm:space-y-3">
+          <div className="flex-row sm:flex-col lg:flex-row justify-center h-full lg:space-x-2 sm:space-y-3 xs:space-y-3" >
 
 
             <Card className="w-full">
@@ -91,8 +90,15 @@ const DashboardPage = () => {
                 </CardTitle>
                 <User size={18} />
               </CardHeader>
-              <CardContent>
+              <CardContent className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <div className="text-2xl font-bold">{dashboardData?.qUsers}</div>
+                <Button
+                  variant={"ghost"}
+                  onClick={() => { router.push("/users") }}
+                >
+                  Ver detalhes
+                  <ArrowRight className="ml-5" size={16} />
+                </Button>
 
               </CardContent>
             </Card>

@@ -108,14 +108,12 @@ const ValidationPage = () => {
           }
 
           const item = fi.data();
-          console.log(fi.id);
           item.uid = fi.id;
           item.user = userDoc.data();
 
           arrayFileslist.push(item);
         });
 
-        console.log(arrayFileslist);
 
         setFilesList(arrayFileslist);
       } catch (error) {
@@ -150,7 +148,6 @@ const ValidationPage = () => {
 
   const updateStatus = async (id: string, status: string) => {
     try {
-      console.log(status, id);
 
       const fileRef = doc(db, "files", id);
       await updateDoc(fileRef, { status: status });
