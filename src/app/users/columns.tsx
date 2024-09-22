@@ -78,9 +78,8 @@ export const columns: ColumnDef<User>[] = [
     cell: ({ cell }) => {
       let value = cell.getValue() || "";
       
-      return(
-        <h1>{value}h</h1>
-      )
+      return value;
+      
     }
   },
 ]

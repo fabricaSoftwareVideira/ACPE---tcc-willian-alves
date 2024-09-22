@@ -386,6 +386,7 @@ const FilesPage = () => {
               <TableRow>
                 <TableHead>Descricao</TableHead>
                 <TableHead>Data de envio</TableHead>
+                <TableHead>Carga Horaria</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="w-[100px]">Arquivo</TableHead>
               </TableRow>
@@ -405,10 +406,10 @@ const FilesPage = () => {
 
                       <TableRow key={file.pathFile}>
                         <TableCell>{file.description}</TableCell>
-                        <TableCell className="font-medium">{new Date(file.createdAt.seconds * 1000 + file.createdAt.nanoseconds / 1000000).toLocaleString()}</TableCell>
+                        <TableCell className="font-medium">{new Date(file.createdAt.seconds * 1000 + file.createdAt.nanoseconds / 1000000).toLocaleString()}</TableCell>         
+                        <TableCell>{file.workload}</TableCell>
                         <TableCell>
                           <Badge variant={statusesColors[file.status]}>{statuses[file.status]}</Badge>
-
                         </TableCell>
                         <TableCell>
                           <Drawer

@@ -77,7 +77,7 @@ const DashboardPage = () => {
         <div className="container mt-5">
           <div className="flex flex-row justify-between items-center p-3 mb-10 border-b">
             <h2 className="text-3xl font-semibold tracking-tight first:mt-0">
-              Dashboard
+              Painel geral
             </h2>
           </div>
           <div className="flex-row sm:flex-col lg:flex-row justify-center h-full lg:space-x-2 sm:space-y-3 xs:space-y-3" >
@@ -110,9 +110,17 @@ const DashboardPage = () => {
                 </CardTitle>
                 <FilePlus size={18} />
               </CardHeader>
-              <CardContent>
+              <CardContent className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <div className="text-2xl font-bold">{dashboardData?.qFiles}</div>
-
+                <Button
+                  variant={"ghost"}
+                  onClick={() => { 
+                    router.push('/validation') ;
+                  }}
+                >
+                  Ver detalhes
+                  <ArrowRight className="ml-5" size={16} />
+                </Button>
               </CardContent>
             </Card>
             <Card className="w-full">
@@ -122,9 +130,17 @@ const DashboardPage = () => {
                 </CardTitle>
                 <FileClock size={18} />
               </CardHeader>
-              <CardContent>
+              <CardContent className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <div className="text-2xl font-bold">{dashboardData?.qPendingFiles}</div>
-
+                <Button
+                  variant={"ghost"}
+                  onClick={() => { 
+                    router.push('/validation?status=pending') ;
+                  }}
+                >
+                  Ver detalhes
+                  <ArrowRight className="ml-5" size={16} />
+                  </Button>
               </CardContent>
             </Card>
 

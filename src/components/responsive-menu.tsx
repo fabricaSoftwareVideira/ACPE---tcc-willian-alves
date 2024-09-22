@@ -33,7 +33,7 @@ const ResponsiveMenu: React.FC = () => {
             <div className="flex flex-row items-center justify-center space-x-6">
 
               {/* Título ou logotipo */}
-              <Link href="/" className="text-xl font-bold mr-4 hidden md:block" style={{ fontSize: 22 }}>
+              <Link href="/dashboard" className="text-xl font-bold mr-4 hidden md:block" style={{ fontSize: 22 }}>
                 <Image
                   src="/icon.png" // Caminho para sua imagem
                   alt="Background do curso de Ciência da Computação"
@@ -47,12 +47,12 @@ const ResponsiveMenu: React.FC = () => {
               {/* Links condicionais baseados no papel do usuário */}
               {session?.user.role === "admin" && (
                 <Link href="/dashboard" className="text-md">
-                  Dashboard
+                  Painel Geral
                 </Link>
               )}
               {session?.user.role === "admin" && (
                 <Link href="/validation" className="text-md">
-                  Validação de Arquivos
+                  Validação de atividades
                 </Link>
               )}
 
@@ -65,7 +65,7 @@ const ResponsiveMenu: React.FC = () => {
               {/* Link para usuários não admin */}
               {session?.user.role !== "admin" && (
                 <Link href="/files" className="text-md">
-                  Arquivos
+                  Atividades
                 </Link>
               )}
 
