@@ -68,6 +68,8 @@ const PasswordResetComponent: React.FC = () => {
     }
   };
 
+  
+
   return (
     <>
       <Button onClick={() => setIsOpen(true)}>Esqueceu a Senha?</Button>
