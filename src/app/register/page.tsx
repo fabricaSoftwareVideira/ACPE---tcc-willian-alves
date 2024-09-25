@@ -35,7 +35,7 @@ const formSchema = z.object({
     message: "Nome é obrigatório",
   }),
   registrationNumber: z.string().min(2, {
-    message: "Matricula é obrigatório",
+    message: "Matricula é obrigatória",
   }),
   email: z.string().email({ message: "Email inválido" }),
   password: z.string().min(6, {
@@ -67,8 +67,6 @@ export default function RegisterPage() {
 
   // 2. Define a submit handler.
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    // Do something with the form values.
-    // ✅ This will be type-safe and validated.
     try {
       // Processa o registro do usuário
       setLoading(true);
@@ -79,12 +77,16 @@ export default function RegisterPage() {
       };
 
 
-      await registerUser(values.email, values.password, additionalData);
+      const user = await registerUser(values.email, values.password, additionalData);
 
-      toast({
-        title: 'Registrado com sucesso',
-        description: 'Sua conta foi criada e voce esta logado',
-      });
+      if(user){
+        toast({
+          title: 'Registrado com sucesso',
+          description: 'Sua conta foi criada. Verifique seu e-mail para ativar sua conta.',
+        });
+
+        router.push('/login');
+      }
       
     } catch (error) {
       // Tratar erros gerais

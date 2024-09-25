@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/card"
 import { LoadingSpinner } from "@/components/ui/loader";
 import { useToast } from "@/hooks/use-toast";
+import PasswordResetComponent from "@/components/password-reset";
 
 const formSchema = z.object({
   email: z.string().email({ message: "Email inválido" }),
@@ -140,9 +141,14 @@ export default function LoginPage() {
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? <LoadingSpinner className="text-black"/> : "Entrar"}
               </Button>
-              <Button type="button" className="w-full px-0 py-0" style={{ marginTop: 5 }} variant={"ghost"} onClick={() => router.push('/register')}>
+              <div className="w-full flex items-center justify-between">
+              
+              <PasswordResetComponent />
+              <Button type="button" className="px-5 py-0" style={{ marginTop: 5 }} variant={"ghost"} onClick={() => router.push('/register')}>
                 Registre-se
               </Button>
+
+              </div>
             </form>
           </Form>
         </CardContent>

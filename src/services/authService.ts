@@ -1,4 +1,4 @@
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, UserCredential } from 'firebase/auth';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, UserCredential, sendEmailVerification } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../config/firebase.config';
 
@@ -23,6 +23,9 @@ export const registerUser = async (
       ...additionalData,
       createdAt: new Date(),
     });
+
+
+    await sendEmailVerification(user);
 
     return userCredential;
   } catch (error) {
