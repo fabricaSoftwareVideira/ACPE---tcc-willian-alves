@@ -18,7 +18,7 @@ import { Input } from "@/components/ui/input";
 import {
   registerUser,
   AdditionalData,
-} from "@/services/authService"
+} from "@/services/authService";
 import { useRouter } from 'next/navigation';
 import {
   Card,
@@ -37,7 +37,7 @@ const formSchema = z
       message: "Nome é obrigatório",
     }),
     registrationNumber: z.string().min(2, {
-      message: "Matricula é obrigatória",
+      message: "Matrícula é obrigatória",
     }),
     email: z.string().email({ message: "Email inválido" }),
     password: z.string().min(6, {
@@ -49,20 +49,16 @@ const formSchema = z
     recaptchaToken: z.string().min(1, { message: "A validação reCAPTCHA é obrigatória" }),
   })
   .refine((data) => data.password === data.confirmPassword, {
-    path: ["confirmPassword"], // O campo onde a mensagem de erro será exibida
+    path: ["confirmPassword"],
     message: "As senhas não coincidem",
   });
 
 export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [recaptchaValue, setRecaptchaValue] = useState<string | null>(null);
   const router = useRouter();
   const { toast } = useToast();
 
-  console.log(process.env.NEXT_PUBLIC_RECAPTCHA_SITE);
-
-  // 1. Define your form.
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -76,33 +72,29 @@ export default function RegisterPage() {
     mode: "onBlur",
   });
 
-  // Manipulador de alterações do reCAPTCHA
   const handleRecaptchaChange = (value: string | null) => {
     setRecaptchaValue(value);
     form.setValue("recaptchaToken", value || "");
   };
 
-  // 2. Define a submit handler.
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    if (!recaptchaValue) {
+      toast({
+        variant: "destructive",
+        title: "Validação reCAPTCHA é obrigatória.",
+      });
+      return;
+    }
+
+    setLoading(true);
     try {
-      if (!recaptchaValue) {
-        toast({
-          variant: "destructive",
-          title: "Validação reCAPTCHA é obrigatória.",
-        });
-        return;
-      }
-
-      // Processa o registro do usuário
-      setLoading(true);
-
-      let additionalData: AdditionalData = {
+      const additionalData: AdditionalData = {
         fullname: values.fullname,
         registrationNumber: values.registrationNumber,
       };
 
       const user = await registerUser(values.email, values.password, additionalData);
-
+      
       if (user) {
         toast({
           title: 'Registrado com sucesso',
@@ -111,15 +103,16 @@ export default function RegisterPage() {
 
         router.push('/login');
       }
-
     } catch (error) {
       toast({
         variant: 'destructive',
         title: 'Falha ao registrar',
+        description: (error as Error)?.message || "Ocorreu um erro inesperado.",
       });
+    } finally {
       setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="max-w-md mx-auto mt-10 m-2">
@@ -141,14 +134,15 @@ export default function RegisterPage() {
                     <FormControl>
                       <Input
                         placeholder="Digite seu nome completo"
-                        className={fieldState.error ? "text-color-red" : ""}
+                        className={fieldState.error ? "text-red-500" : ""}
                         {...field}
                       />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
-              /><FormField
+              />
+              <FormField
                 control={form.control}
                 name="registrationNumber"
                 render={({ field }) => (
@@ -161,7 +155,6 @@ export default function RegisterPage() {
                   </FormItem>
                 )}
               />
-
               <FormField
                 control={form.control}
                 name="email"
@@ -179,7 +172,6 @@ export default function RegisterPage() {
                   </FormItem>
                 )}
               />
-
               <FormField
                 control={form.control}
                 name="password"
@@ -197,7 +189,6 @@ export default function RegisterPage() {
                   </FormItem>
                 )}
               />
-
               <FormField
                 control={form.control}
                 name="confirmPassword"
@@ -215,7 +206,6 @@ export default function RegisterPage() {
                   </FormItem>
                 )}
               />
-
               {/* reCAPTCHA */}
               <div className="flex justify-center w-full">
                 <ReCAPTCHA
@@ -224,16 +214,13 @@ export default function RegisterPage() {
                 />
               </div>
 
-              {error && <p className="text-red-500">{error}</p>}
-
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? <LoadingSpinner className="text-black" /> : "Registrar"}
               </Button>
 
               <Button
                 type="button"
-                className="w-full"
-                style={{ marginTop: 5 }}
+                className="w-full mt-2"
                 variant={"ghost"}
                 onClick={() => router.push('/login')}
               >
