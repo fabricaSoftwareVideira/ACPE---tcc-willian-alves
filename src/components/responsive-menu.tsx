@@ -58,7 +58,7 @@ const ResponsiveMenu: React.FC = () => {
 
               {session?.user.role === "admin" && (
                 <Link href="/users" className="text-md">
-                  Usuarios
+                  Usuários
                 </Link>
               )}
 

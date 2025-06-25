@@ -135,48 +135,41 @@ const ValidationPage = () => {
     }
 
     try {
-      // Consulta para obter todos os arquivos
+      // Fetch all users once and build a map
+      const usersSnapshot = await getDocs(collection(db, "users"));
+      const usersMap: Record<string, any> = {};
+      usersSnapshot.forEach(doc => {
+        usersMap[doc.id] = doc.data();
+      });
+
+      // Fetch all files
       const filesSnapshot = await getDocs(query(collection(db, "files")));
 
-      // Checando se existem arquivos
       if (filesSnapshot.empty) {
         setFilesList([]);
+        setLoading(false);
         return;
       }
 
-      // Array para armazenar a lista de arquivos com os dados do usuário
       let arrayFileslist: any = [];
-
-      // Percorre cada documento de arquivo
       for (const fi of filesSnapshot.docs) {
         const fileData = fi.data();
         const userId = fileData.userId;
-
-        try {
-          // Busca o usuário correspondente diretamente usando o userId
-          const userDoc = await getDoc(doc(db, "users", userId));
-
-          if (userDoc.exists()) {
-            const userData = userDoc.data();
-
-            // Adiciona os dados do arquivo e do usuário ao item
-            const item = {
-              uid: fi.id,
-              ...fileData,
-              user: userData, // Nome, email, etc.
-            };
-
-            // Adiciona o item à lista
-            arrayFileslist.push(item);
-          } else {
-            console.error(`Usuário não encontrado: ${userId}`);
-          }
-        } catch (error) {
-          console.error(`Erro ao buscar o usuário ${userId}:`, error);
+        if (!userId) {
+          console.error(`Arquivo ${fi.id} não possui userId`);
+          continue;
+        }
+        const userData = usersMap[userId];
+        if (userData) {
+          arrayFileslist.push({
+            uid: fi.id,
+            ...fileData,
+            user: userData,
+          });
+        } else {
+          console.error(`Usuário não encontrado: ${userId}`);
         }
       }
-
-      // Atualiza a lista de arquivos
       setFilesList(arrayFileslist);
       setLoading(false);
     } catch (error) {
@@ -276,29 +269,26 @@ const ValidationPage = () => {
 
   const updateStatus = async () => {
     try {
-      console.log(formValidation, currentFile);
-      
       if (formValidation && currentFile.uid) {
         const fileRef = doc(db, "files", currentFile.uid);
+        // Always preserve userId
         let data = {
           status: formValidation.status,
           observation: formValidation.observation || "Sem observação",
           workload: formValidation.workload,
+          userId: currentFile.userId, // ensure userId is not lost
         };
-        console.log("Dados a serem salvos:", data);
-        
-        // Tente salvar e aguarde a resposta
         await setDoc(fileRef, data, { merge: true });
         toast({
           title: "Validação concluida com sucesso",
           variant: "default"
         });
-        setDrawerVisibleView(false);
-  
+        setTimeout(() => {
+          setDrawerVisibleView(false);
+        }, 2000);
       } else {
         console.warn("Form ou ID não fornecidos");
       }
-  
     } catch (error) {
       console.error("Erro ao atualizar o status:", error);
     }
@@ -408,45 +398,49 @@ const ValidationPage = () => {
           </div>
 
           <div className="mb-4 flex flex-wrap gap-2 justify-start items-center">
-            {/* Mapeia os filtros e cria um componente para cada um,
-              exceto pelo status, caso ele esteja com o valor "all"
-           */}
+            {/* Render filter badges */}
             {(Object.keys(filters) as (keyof Filters)[]).map((key) => {
               if (filters[key] && (key !== "status" || filters["status"] !== "all")) {
-
                 return (
-                  <>
-                    <Badge
-                      key={key}
-                      variant="secondary"
-                      className="flex items-center text-xs font-medium p-3 h-4"
+                  <Badge
+                    key={key}
+                    variant="secondary"
+                    className="flex items-center text-xs font-medium p-3 h-4"
+                  >
+                    <span>
+                      {`
+                      ${filterDisplayNames[key] || key}: 
+                      ${key === "createdAt"
+                          ?
+                          filters[key].split("-").reverse().join("/")
+                          :
+                          statuses[filters[key]] || filters[key]
+                        }
+                    `}
+                    </span>
+                    <button
+                      onClick={() => removeFilter(key)}
+                      className="text-white ml-3"
                     >
-                      <span>
-                        {`
-                        ${filterDisplayNames[key] || key}: 
-                        ${key === "createdAt"
-                            ?
-                            filters[key].split("-").reverse().join("/")
-                            :
-                            statuses[filters[key]] || filters[key]
-                          }
-                      `}
-                      </span>
-                      <button
-                        onClick={() => removeFilter(key)}
-                        className="text-white ml-3"
-                      >
-                        ✕
-                      </button>
-                    </Badge>
-                    <Button onClick={clearAllFilters} className="badge text-xs font-medium ml-5 p-3 h-4  rounded-full" variant={"destructive"}>
-                      Remover todos
-                    </Button>
-                  </>
+                      ✕
+                    </button>
+                  </Badge>
                 );
               }
               return null;
             })}
+            {/* Render "Remover todos" button only once if any filter is active */}
+            {Object.keys(filters).some(
+              (key) => filters[key as keyof Filters] && (key !== "status" || filters["status"] !== "all")
+            ) && (
+              <Button
+                onClick={clearAllFilters}
+                className="badge text-xs font-medium ml-5 p-3 h-4 rounded-full"
+                variant={"destructive"}
+              >
+                Remover todos
+              </Button>
+            )}
           </div>
           <Table className='border'>
             <TableHeader>
@@ -524,9 +518,9 @@ const ValidationPage = () => {
             </TableBody>
           </Table>
 
-          <Drawer open={drawerVisibleView}>
+          <Drawer open={drawerVisibleView} >
             <DrawerTrigger asChild></DrawerTrigger>
-            <DrawerContent className=" ">
+            <DrawerContent className="h-[90%]">
               <DrawerHeader>
                 <DrawerTitle className="text-xl font-bold">Validar atividade</DrawerTitle>
 
