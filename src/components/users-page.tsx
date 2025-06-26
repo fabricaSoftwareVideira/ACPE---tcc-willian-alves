@@ -88,8 +88,9 @@ export default function UsersPage() {
         // 3. Group files by userId
         const filesByUserId: any = {};
         for (const file of filesArray) {
-          if (!filesByUserId[file.userId]) filesByUserId[file.userId] = [];
-          filesByUserId[file.userId].push(file);
+          const typedFile = file as any;
+          if (!filesByUserId[typedFile.userId]) filesByUserId[typedFile.userId] = [];
+          filesByUserId[typedFile.userId].push(typedFile);
         }
 
         // 4. Attach files and approved hours to users
