@@ -38,10 +38,11 @@ const DashboardPage = () => {
 
         const filesSnapshot = await getDocs(files);
         const usersSnapshot = await getDocs(users);
+        let usersLenght = usersSnapshot.docs.filter((doc) => !doc.data().role).length;
 
         const newData = {
           qFiles: filesSnapshot.docs.length,
-          qUsers: usersSnapshot.docs.length,
+          qUsers: usersLenght,
           qPendingFiles: 0,
         };
 

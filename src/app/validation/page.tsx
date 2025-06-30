@@ -473,7 +473,12 @@ const ValidationPage = () => {
                         <TableCell>{file.user.registrationNumber}</TableCell>
                         <TableCell>{file.description}</TableCell>
                         <TableCell className="font-medium">
-                          {new Date(file.createdAt.seconds * 1000 + file.createdAt.nanoseconds / 1000000).toLocaleString()}
+                          {file.createdAt && typeof file.createdAt.seconds === 'number'
+                            ? new Date(
+                                file.createdAt.seconds * 1000 +
+                                (file.createdAt.nanoseconds ? file.createdAt.nanoseconds / 1000000 : 0)
+                              ).toLocaleString()
+                            : 'Data não disponível'}
                         </TableCell>
                         <TableCell>{file.workload}</TableCell>
                         <TableCell>
