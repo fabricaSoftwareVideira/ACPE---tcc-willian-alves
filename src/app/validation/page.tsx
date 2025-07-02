@@ -260,11 +260,20 @@ const ValidationPage = () => {
   }, [drawerVisibleView, pdfPath]);
 
   const handleOpenPdf = () => {
-    if (pdfUrl) {
-      window.open(pdfUrl, '_blank');
-    } else {
-      console.error("URL do PDF não disponível, não é possível abrir.");
+    if (pdfPath === null || pdfPath === undefined) {
+      console.error("Erro ao abrir o PDF: a URL do PDF é nula ou indefinida");
+      return;
     }
+
+    getDownloadURL(ref(storage, pdfPath))
+      .then((url) => {
+        if (url === null || url === undefined) {
+          console.error("Erro ao obter a URL do PDF: a URL é nula ou indefinida");
+          return;
+        }
+
+        window.open(url, '_blank');
+      });
   };
 
   const updateStatus = async () => {
