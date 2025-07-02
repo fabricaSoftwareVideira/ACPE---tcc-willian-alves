@@ -504,6 +504,8 @@ const ValidationPage = () => {
                           <Button
                             variant={"ghost"}
                             onClick={() => {
+                              setCurrentFile(file);
+                              setPdfPath(file.pathFile);
                               handleOpenPdf();
                             }}
                           >
