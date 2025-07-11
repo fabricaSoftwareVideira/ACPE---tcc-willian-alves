@@ -1,9 +1,7 @@
 "use client";
 import ResponsiveMenu from "@/components/responsive-menu";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
+  TooltipProvider,
 } from "@/components/ui/tooltip";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -12,38 +10,14 @@ import {
   collection,
   query,
   getDocs,
-  getDoc,
   doc,
   setDoc,
 } from "firebase/firestore";
 import { db, storage } from "@/config/firebase.config";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Container,
-  Icon,
-  Plus,
-  FileBadge,
-  FilterIcon,
-  FileDownIcon,
+  FilterIcon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Drawer,
-  DrawerClose,
-  DrawerContent,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger,
-} from "@/components/ui/drawer";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -56,20 +30,13 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { ref, getDownloadURL } from "firebase/storage";
-import { Badge } from "@/components/ui/badge";
 import { LoadingSpinner } from "@/components/ui/loader";
 import withAuthorization from "@/components/with-authorization";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { set } from "zod";
+import ValidationFilters from './ValidationFilters';
+import ValidationTable from './ValidationTable';
+import ValidationDrawer from './ValidationDrawer';
+import ValidationArchiveDialog from './ValidationArchiveDialog';
 
 interface Filters {
   status: string;
@@ -77,6 +44,7 @@ interface Filters {
   user: string;
   createdAt: string;
   workload: string;
+  includeArchived: boolean;
 }
 
 const filterDisplayNames: { [key in keyof Filters]: string } = {
@@ -85,6 +53,7 @@ const filterDisplayNames: { [key in keyof Filters]: string } = {
   user: "Nome",
   createdAt: "Data de envio",
   workload: "Carga Horária",
+  includeArchived: "Incluir Arquivados",
 };
 
 const statuses: { [key: string]: string } = {
@@ -123,15 +92,15 @@ const ValidationPage = () => {
     status: "all",
     createdAt: "",
     workload: "",
+    includeArchived: false,
   });
   const [alertVisible, setAlertVisible] = useState<any>({
     visible: false,
   });
   const [drawerVisibleView, setDrawerVisibleView] = useState(false);
   const [pdfUrl, setPdfUrl] = useState("");
-  const [pdfPath, setPdfPath] = useState(null);
-  const [error, setError] = useState<string | null>(null);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [pdfPath, setPdfPath] = useState<string>(""); 
+  const [showArchiveDialog, setShowArchiveDialog] = useState(false);
   const { data: session, status } = useSession();
   const router: any = useRouter();
   const { toast } = useToast();
@@ -242,6 +211,10 @@ const ValidationPage = () => {
       );
     }
 
+    if (!filters.includeArchived) {
+      filteredList = filteredList.filter((f: any) => f.archived === false || f.archived === undefined);
+    }
+
     return filteredList;
   }, [filesList, filters]);
 
@@ -252,7 +225,7 @@ const ValidationPage = () => {
   useEffect(() => {
     if (!pdfPath) {
       setPdfUrl("");
-      return;
+      return; 
     }
 
     setPdfLoading(true);
@@ -328,6 +301,14 @@ const ValidationPage = () => {
     }
   };
 
+  const handleArchiveFile = async () => {
+    if (!currentFile?.uid) return;
+    const fileRef = doc(db, "files", currentFile.uid);
+    await setDoc(fileRef, { archived: true }, { merge: true });
+    setShowArchiveDialog(false);
+    getAllFiles(); // Atualiza a lista
+  };
+
   useEffect(() => {
     setTimeout(() => {
       setPdfLoading(false);
@@ -357,6 +338,7 @@ const ValidationPage = () => {
       user: "",
       createdAt: "",
       workload: "",
+      includeArchived: false,
     });
   };
 
@@ -368,7 +350,7 @@ const ValidationPage = () => {
     );
   } else {
     return (
-      <div>
+      <TooltipProvider>
         <ResponsiveMenu />
         <div className="container mt-5">
           <div className="flex flex-row justify-between items-center p-3 mb-4 border-b">
@@ -382,7 +364,6 @@ const ValidationPage = () => {
               <FilterIcon size={18} />
             </Button>
           </div>
-
           <div
             className={`
               transition-all duration-500 ease-in-out overflow-hidden 
@@ -393,309 +374,73 @@ const ValidationPage = () => {
               }
             `}
           >
-            <div className="mb-4 grid grid-cols-3 gap-4 bg-slate-900 p-4 rounded-sm">
-              <Select
-                onValueChange={(value) => handleFilterChange("status", value)}
-                value={filters.status}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos</SelectItem>
-                  <SelectItem value="approved">Aprovado</SelectItem>
-                  <SelectItem value="pending">Pendente</SelectItem>
-                  <SelectItem value="rejected">Rejeitado</SelectItem>
-                  <SelectItem value="archived">Arquivado</SelectItem>
-                </SelectContent>
-              </Select>
-              <Input
-                placeholder="Descrição"
-                value={filters.description}
-                onChange={(e) =>
-                  handleFilterChange("description", e.target.value)
-                }
-              />
-              <Input
-                type="text"
-                placeholder="Nome do aluno"
-                value={filters.user}
-                onChange={(e) => handleFilterChange("user", e.target.value)}
-              />
-              <Input
-                type="date"
-                placeholder="Data de envio"
-                value={filters.createdAt}
-                onChange={(e) =>
-                  handleFilterChange("createdAt", e.target.value)
-                }
-              />
-              <Input
-                placeholder="Carga Horária"
-                value={filters.workload}
-                onChange={(e) => handleFilterChange("workload", e.target.value)}
-              />
-            </div>
+            <ValidationFilters
+              filters={filters}
+              handleFilterChange={handleFilterChange}
+              removeFilter={removeFilter}
+              clearAllFilters={clearAllFilters}
+              filterDisplayNames={filterDisplayNames}
+              statuses={statuses}
+            />
           </div>
-
-          <div className="mb-4 flex flex-wrap gap-2 justify-start items-center">
-            {(Object.keys(filters) as (keyof Filters)[]).map((key) => {
-              if (
-                filters[key] &&
-                (key !== "status" || filters["status"] !== "all")
-              ) {
-                return (
-                  <Badge
-                    key={key}
-                    variant="secondary"
-                    className="flex items-center text-xs font-medium p-3 h-4"
-                  >
-                    <span>
-                      {`
-                      ${filterDisplayNames[key] || key}: 
-                      ${
-                        key === "createdAt"
-                          ? filters[key].split("-").reverse().join("/")
-                          : statuses[filters[key]] || filters[key]
-                      }
-                    `}
-                    </span>
-                    <button
-                      onClick={() => removeFilter(key)}
-                      className="text-white ml-3"
-                    >
-                      ✕
-                    </button>
-                  </Badge>
-                );
-              }
-              return null;
-            })}
-            {Object.keys(filters).some(
-              (key) =>
-                filters[key as keyof Filters] &&
-                (key !== "status" || filters["status"] !== "all")
-            ) && (
-              <Button
-                onClick={clearAllFilters}
-                className="badge text-xs font-medium ml-5 p-3 h-4 rounded-full"
-                variant={"destructive"}
-              >
-                Remover todos
-              </Button>
-            )}
-          </div>
-          <Table className="border">
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nome</TableHead>
-                <TableHead>Matrícula</TableHead>
-                <TableHead>Descrição</TableHead>
-                <TableHead>Data de envio</TableHead>
-                <TableHead>Carga Horaria</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="w-[100px]">Arquivo</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loading ? (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center">
-                    <div className="flex justify-center items-center w-full">
-                      <LoadingSpinner className="bg-dark" />
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ) : filteredFilesList.length > 0 ? (
-                filteredFilesList?.map((file: any) => (
-                  <TableRow key={file.pathFile}>
-                    <TableCell>{file.user.fullname}</TableCell>
-                    <TableCell>{file.user.registrationNumber}</TableCell>
-                    <TableCell>{file.description}</TableCell>
-                    <TableCell className="font-medium">
-                      {file.createdAt &&
-                      typeof file.createdAt.seconds === "number"
-                        ? new Date(
-                            file.createdAt.seconds * 1000 +
-                              (file.createdAt.nanoseconds
-                                ? file.createdAt.nanoseconds / 1000000
-                                : 0)
-                          ).toLocaleString()
-                        : "Data não disponível"}
-                    </TableCell>
-                    <TableCell>{file.workload}</TableCell>
-                    <TableCell>
-                      <Badge variant={statusesColors[file.status]}>
-                        {statuses[file.status]}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="flex">
-                      <Button
-                        variant={"ghost"}
-                        onClick={() => {
-                          setDrawerVisibleView(true);
-                          setPdfPath(file.pathFile);
-                          setPdfLoading(true);
-                          setCurrentFile(file);
-                          setFormValidation({
-                            status: file.status,
-                            workload: file.workload,
-                            observation: file.observation || "",
-                          });
-                        }}
-                      >
-                        <FileBadge size={18} />
-                      </Button>
-                      <Button
-                        variant={"ghost"}
-                        disabled={downloadLoadingFiles[file.uid] || false}
-                        onClick={() => {
-                          setCurrentFile(file);
-                          handleOpenPdf(file.pathFile, file.uid);
-                        }}
-                      >
-                        {downloadLoadingFiles[file.uid] ? (
-                          <LoadingSpinner className="bg-dark" />
-                        ) : (
-                          <FileDownIcon size={18} />
-                        )}
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center">
-                    Nenhum dado disponível
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-
-          <Drawer open={drawerVisibleView}>
-            <DrawerTrigger asChild></DrawerTrigger>
-            <DrawerContent className="h-[90%]">
-              <DrawerHeader>
-                <DrawerTitle className="text-xl font-bold">
-                  Validar atividade
-                </DrawerTitle>
-              </DrawerHeader>
-              <div className="flex flex-col lg:flex-row w-full h-full gap-4 p-4 overflow-y-auto">
-                <div className="w-full lg:w-1/4 flex flex-col gap-4">
-                  <Label htmlFor="workload">Carga Horária</Label>
-                  <Input
-                    type="number"
-                    placeholder="Carga Horária"
-                    value={formValidation.workload}
-                    onChange={(e) =>
-                      setFormValidation({
-                        ...formValidation,
-                        workload: e.target.value,
-                      })
-                    }
-                  />
-                  <Label htmlFor="status">Status</Label>
-                  <Select
-                    onValueChange={(value) =>
-                      setFormValidation({ ...formValidation, status: value })
-                    }
-                    defaultValue={formValidation.status}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="approved">Aprovado</SelectItem>
-                      <SelectItem value="pending">Pendente</SelectItem>
-                      <SelectItem value="rejected">Rejeitado</SelectItem>
-                      <SelectItem value="archived">Arquivado</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Label htmlFor="observation">Observação</Label>
-                  <Input
-                    type="text"
-                    placeholder="Observação"
-                    value={formValidation.observation}
-                    onChange={(e) =>
-                      setFormValidation({
-                        ...formValidation,
-                        observation: e.target.value,
-                      })
-                    }
-                  />
-                </div>
-                <div className="w-full lg:w-3/4 h-full flex justify-center items-center overflow-hidden">
-                  {pdfUrl && !pdfLoading ? (
-                    <iframe
-                      src={pdfUrl}
-                      className="w-full h-full"
-                      style={{
-                        minHeight: "400px",
-                        height: "100%",
-                        width: "100%",
-                      }}
-                      title="PDF Viewer"
-                      loading="lazy"
-                    />
-                  ) : (
-                    <div className="h-full w-full flex justify-center items-center">
-                      <LoadingSpinner className="bg-dark" />
-                    </div>
-                  )}
-                </div>
-              </div>
-              <DrawerFooter>
-                <DrawerClose className="flex justify-between">
-                  <Button
-                    variant="outline"
-                    className="mr-6"
-                    onClick={() => {
-                      setDrawerVisibleView(false);
-                    }}
-                  >
-                    Cancelar
-                  </Button>
-                  <Button
-                    variant="default"
-                    onClick={() => {
-                      setAlertVisible({ visible: true, id: currentFile.id });
-                    }}
-                  >
-                    Salvar
-                  </Button>
-                </DrawerClose>
-              </DrawerFooter>
-            </DrawerContent>
-          </Drawer>
+          <ValidationTable
+            filteredFilesList={filteredFilesList}
+            loading={loading}
+            downloadLoadingFiles={downloadLoadingFiles}
+            setDrawerVisibleView={setDrawerVisibleView}
+            setPdfPath={setPdfPath}
+            setPdfLoading={setPdfLoading}
+            setCurrentFile={setCurrentFile}
+            setFormValidation={setFormValidation}
+            handleOpenPdf={handleOpenPdf}
+            setShowArchiveDialog={setShowArchiveDialog}
+            setAlertVisible={setAlertVisible}
+            statuses={statuses}
+            statusesColors={statusesColors}
+          />
+          <ValidationDrawer
+            drawerVisibleView={drawerVisibleView}
+            setDrawerVisibleView={setDrawerVisibleView}
+            pdfUrl={pdfUrl}
+            pdfLoading={pdfLoading}
+            formValidation={formValidation}
+            setFormValidation={setFormValidation}
+            updateStatus={updateStatus}
+            setAlertVisible={setAlertVisible}
+            currentFile={currentFile}
+          />
+          <ValidationArchiveDialog
+            showArchiveDialog={showArchiveDialog}
+            setShowArchiveDialog={setShowArchiveDialog}
+            handleArchiveFile={handleArchiveFile}
+          />
+          <AlertDialog open={alertVisible.visible}>
+            <AlertDialogTrigger asChild></AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Confirmação</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Tem certeza que deseja alterar a validação do arquivo?
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel onClick={() => setAlertVisible(false)}>
+                  Cancelar
+                </AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={() => {
+                    updateStatus();
+                    setAlertVisible(false);
+                    setDrawerVisibleView(false);
+                  }}
+                >
+                  Sim
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
-
-        <AlertDialog open={alertVisible.visible}>
-          <AlertDialogTrigger asChild></AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Confirmação</AlertDialogTitle>
-              <AlertDialogDescription>
-                Tem certeza que deseja alterar a validação do arquivo?
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel onClick={() => setAlertVisible(false)}>
-                Cancelar
-              </AlertDialogCancel>
-              <AlertDialogAction
-                onClick={() => {
-                  updateStatus();
-                  setAlertVisible(false);
-                  setDrawerVisibleView(false);
-                }}
-              >
-                Sim
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      </div>
+      </TooltipProvider>
     );
   }
 };

@@ -13,7 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Plus, FileBadge } from 'lucide-react';
+import { Plus, FileBadge, CalendarIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Drawer,
@@ -43,18 +43,26 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { LoadingSpinner } from '@/components/ui/loader';
 import withAuthorization from '@/components/with-authorization';
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { format } from "date-fns";
+import { ChevronDownIcon } from "lucide-react";
+import { cn } from '@/lib/utils';
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 
 const formSchema = z.object({
+  name: z.string().min(2, { message: "Nome é obrigatório" }),
   description: z.string().min(2, {
     message: "Descricao é obrigatória",
   }),
   file: z.instanceof(globalThis.FileList).optional(),
   workload: z.string().min(1, { message: "Carga horaria é obrigatória" }),
-
+  completionDate: z.date({ required_error: "Data de realização é obrigatória" }),
 });
 
 interface FileValidation {
+  name: string;
   description: string;
   workload: string;
   hashFile: string;
@@ -62,6 +70,7 @@ interface FileValidation {
   userId: any;
   pathFile: string;
   createdAt: any;
+  completionDate: string;
 }
 
 const statuses: any = {
@@ -94,8 +103,10 @@ const FilesPage = () => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      name: "",
       description: "",
       workload: "",
+      completionDate: undefined,
     },
     mode: "onBlur",
   });
@@ -160,6 +171,7 @@ const FilesPage = () => {
             const pathFile = await uploadFile(selectedFile, fileName, session?.user.id);
 
             const fileValidation: FileValidation = {
+              name: values.name,
               description: values.description,
               workload: values.workload,
               hashFile: hash,
@@ -167,6 +179,9 @@ const FilesPage = () => {
               userId: session?.user.id,
               pathFile,
               createdAt: serverTimestamp(),
+              completionDate: values.completionDate
+                ? values.completionDate.toISOString().split("T")[0]
+                : "",
             };
 
 
@@ -312,6 +327,23 @@ const FilesPage = () => {
                     <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-6'>
                       <FormField
                         control={form.control}
+                        name="name"
+                        render={({ field, fieldState }) => (
+                          <FormItem>
+                            <FormLabel>Nome da atividade</FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="Digite o nome da atividade"
+                                className={fieldState.error ? "text-color-red" : ""}
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
                         name="description"
                         render={({ field, fieldState }) => (
                           <FormItem>
@@ -344,6 +376,47 @@ const FilesPage = () => {
                             <FormMessage />
                           </FormItem>
                         )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="completionDate"
+                        render={({ field }) => {
+                          return (
+                            <FormItem className="flex flex-col">
+                              <FormLabel>Data de realização</FormLabel>
+                              <Popover modal={true}>
+                                <PopoverTrigger asChild>
+                                  <FormControl>
+                                    <Button
+                                      variant={"outline"}
+                                      className={cn(
+                                        "w-full pl-3 text-left font-normal",
+                                        !field.value && "text-muted-foreground"
+                                      )}
+                                    >
+                                      {field.value ? (
+                                        format(field.value, "dd/MM/yyyy")
+                                      ) : (
+                                        <span>Selecione a data</span>
+                                      )}
+                                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                    </Button>
+                                  </FormControl>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-full p-0" align="start">
+                                  <Calendar
+                                    mode="single"
+                                    selected={field.value}
+                                    onSelect={field.onChange}
+                                    disabled={(date) => date > new Date()}
+                                    captionLayout="dropdown"
+                                  />
+                                </PopoverContent>
+                              </Popover>
+                              <FormMessage />
+                            </FormItem>
+                          );
+                        }}
                       />
                       <FormField
                         control={form.control}
@@ -384,7 +457,9 @@ const FilesPage = () => {
           <Table className='border'>
             <TableHeader>
               <TableRow>
+                <TableHead>Nome</TableHead>
                 <TableHead>Descricao</TableHead>
+                <TableHead>Data de realização</TableHead>
                 <TableHead>Data de envio</TableHead>
                 <TableHead>Carga Horaria</TableHead>
                 <TableHead>Status</TableHead>
@@ -405,53 +480,81 @@ const FilesPage = () => {
                     filesList?.map((file: any) => (
 
                       <TableRow key={file.pathFile}>
+                        <TableCell>{file.name}</TableCell>
                         <TableCell>{file.description}</TableCell>
+                        <TableCell>{file.completionDate ? new Date(file.completionDate).toLocaleDateString() : ""}</TableCell>
                         <TableCell className="font-medium">{new Date(file.createdAt.seconds * 1000 + file.createdAt.nanoseconds / 1000000).toLocaleString()}</TableCell>         
                         <TableCell>{file.workload}</TableCell>
                         <TableCell>
                           <Badge variant={statusesColors[file.status]}>{statuses[file.status]}</Badge>
                         </TableCell>
                         <TableCell>
-                          <Drawer
-                            open={drawerVisibleView}
-                          >
-                            <DrawerTrigger asChild>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Drawer
+                                open={drawerVisibleView}
+                              >
+                                <DrawerTrigger asChild>
+                                  <Button
+                                    variant={"ghost"}
+                                    onClick={() => {
+                                      setDrawerVisibleView(true);
+                                      setPdfPath(file.pathFile)
+                                    }}
+                                  >
+                                    <FileBadge size={18} />
+                                  </Button>
+                                </DrawerTrigger>
+                                <DrawerContent className="h-80% ">
+                                  <DrawerHeader>
+                                    <DrawerTitle>Visualize seu arquivo</DrawerTitle>
+                                  </DrawerHeader>
+                                  <div>
+                                    {pdfUrl && pdfLoading ? (
+                                      <iframe
+                                        src={pdfUrl}
+                                        width="100%"
+                                        height="600px"
+                                        title="PDF Viewer"
+                                        onLoad={() => setPdfLoading(false)}
+                                      />
+                                    ) : (
+                                      <div className="h-full w-full flex justify-center items-center"><LoadingSpinner className="bg-dark" /></div>
+                                    )}
+                                  </div>
+
+                                  <DrawerFooter>
+                                    <DrawerClose>
+                                      <Button variant="outline" onClick={() => { setDrawerVisibleView(false) }}>Cancelar</Button>
+                                    </DrawerClose>
+                                  </DrawerFooter>
+                                </DrawerContent>
+                              </Drawer>
+                            </TooltipTrigger>
+                            <TooltipContent>Visualizar arquivo</TooltipContent>
+                          </Tooltip>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
                               <Button
                                 variant={"ghost"}
-                                onClick={() => {
-                                  setDrawerVisibleView(true);
-                                  setPdfPath(file.pathFile)
-                                }}
+                                // ... outros props do botão de download ...
                               >
-                                <FileBadge size={18} />
-
+                                {/* ... */}
                               </Button>
-                            </DrawerTrigger>
-                            <DrawerContent className="h-80% ">
-                              <DrawerHeader>
-                                <DrawerTitle>Visualize seu arquivo</DrawerTitle>
-                              </DrawerHeader>
-                              <div>
-                                {pdfUrl && pdfLoading ? (
-                                  <iframe
-                                    src={pdfUrl}
-                                    width="100%"
-                                    height="600px"
-                                    title="PDF Viewer"
-                                    onLoad={() => setPdfLoading(false)}
-                                  />
-                                ) : (
-                                  <div className="h-full w-full flex justify-center items-center"><LoadingSpinner className="bg-dark" /></div>
-                                )}
-                              </div>
-
-                              <DrawerFooter>
-                                <DrawerClose>
-                                  <Button variant="outline" onClick={() => { setDrawerVisibleView(false) }}>Cancelar</Button>
-                                </DrawerClose>
-                              </DrawerFooter>
-                            </ DrawerContent>
-                          </Drawer>
+                            </TooltipTrigger>
+                            <TooltipContent>Baixar arquivo</TooltipContent>
+                          </Tooltip>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                // ... outros props do botão de arquivar ...
+                              >
+                                {/* ... */}
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>Arquivar arquivo</TooltipContent>
+                          </Tooltip>
                         </TableCell>
                       </TableRow>
                     ))
