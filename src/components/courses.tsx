@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -6,7 +6,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
+} from "@/components/ui/table";
 import {
   Drawer,
   DrawerClose,
@@ -15,7 +15,7 @@ import {
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
-} from "@/components/ui/drawer"
+} from "@/components/ui/drawer";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -28,11 +28,20 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Button } from './ui/button';
-import { Edit2Icon, Plus, Trash } from 'lucide-react';
-import { LoadingSpinner } from './ui/loader';
-import { collection, query, getDocs, addDoc, serverTimestamp, doc, setDoc, deleteDoc } from "firebase/firestore";
-import { db } from '@/config/firebase.config';
+import { Button } from "./ui/button";
+import { Edit2Icon, Plus, Trash } from "lucide-react";
+import { LoadingSpinner } from "./ui/loader";
+import {
+  collection,
+  query,
+  getDocs,
+  addDoc,
+  serverTimestamp,
+  doc,
+  setDoc,
+  deleteDoc,
+} from "firebase/firestore";
+import { db } from "@/config/firebase.config";
 import { useToast } from "@/hooks/use-toast";
 import {
   AlertDialog,
@@ -43,7 +52,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
+} from "@/components/ui/alert-dialog";
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -57,7 +66,7 @@ export default function Courses() {
   const [alertVisible, setAlertVisible] = useState(false);
   const [editing, setEditing] = useState({
     status: false,
-    id: ""
+    id: "",
   });
   const [drawerVisibleForm, setDrawerVisibleForm] = useState(false);
   const { toast } = useToast();
@@ -76,26 +85,24 @@ export default function Courses() {
           const arrayCourses: Array<any> = [];
 
           querySnapshot.forEach((doc) => {
-            let course: any = doc.data()
-            course.id = doc.id
+            let course: any = doc.data();
+            course.id = doc.id;
             arrayCourses.push(course);
           });
 
           setCourses(arrayCourses);
         });
-
       } catch (error) {
         console.error("Erro ao obter lista de arquivos:", error);
       }
     }
     getUserInfo();
-
   }, [drawerVisibleForm, alertVisible]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: ""
+      name: "",
     },
     mode: "onBlur",
   });
@@ -105,28 +112,27 @@ export default function Courses() {
       setLoading(true);
 
       if (editing.status) {
-
         const docRef = doc(db, "courses", editing.id);
 
-        setDoc(docRef, {
-          name: values.name
-        }, {
-          merge: true
-        }).then(() => {
+        setDoc(
+          docRef,
+          {
+            name: values.name,
+          },
+          {
+            merge: true,
+          }
+        ).then(() => {
           toast({
             title: "Curso atualizado com sucesso!",
-          })
+          });
 
           setLoading(false);
           setDrawerVisibleForm(false);
           form.clearErrors();
           form.reset();
-
         });
-
       } else {
-
-
         let data: any = values;
 
         data.projects = [];
@@ -136,41 +142,33 @@ export default function Courses() {
 
         toast({
           title: "Curso cadastrado com sucesso!",
-        })
+        });
 
         setLoading(false);
         setDrawerVisibleForm(false);
         form.clearErrors();
         form.reset();
-
       }
-
-
-
     } catch (e) {
       setLoading(false);
       toast({
         variant: "destructive",
         title: "Falha ao cadastrar curso! Tente novamente.",
-      })
+      });
     }
-
   }
 
   async function onDelete() {
     try {
-      let docRef = doc(db, 'courses', editing.id);
+      let docRef = doc(db, "courses", editing.id);
 
-      await deleteDoc(docRef)
-        .then(() => {
-          setAlertVisible(false);
-          toast({
-            title: "Curso deletado com sucesso!",
-          });
-          setLoading(false)
-        })
-
-
+      await deleteDoc(docRef).then(() => {
+        setAlertVisible(false);
+        toast({
+          title: "Curso deletado com sucesso!",
+        });
+        setLoading(false);
+      });
     } catch (error) {
       toast({
         variant: "destructive",
@@ -183,23 +181,19 @@ export default function Courses() {
 
   return (
     <div className="pt-4 flex flex-col items-end">
-
       <div className="pb-3">
-
         <Button
           variant={"default"}
-          onClick={() => { setDrawerVisibleForm(true) }}
+          onClick={() => {
+            setDrawerVisibleForm(true);
+          }}
         >
           <Plus size={16} />
-
           Curso
         </Button>
-
       </div>
 
-      <Table
-        className="border"
-      >
+      <Table className="border">
         <TableHeader>
           <TableRow>
             <TableHead className="">Nome</TableHead>
@@ -208,72 +202,71 @@ export default function Courses() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {
-            courses?.map((course: any) => (
-              <TableRow key={course.name}>
-                <TableCell>{course.name}</TableCell>
-                <TableCell>
-                  {
-                    course.projects.length === 0 ?
-                      "Sem projetos"
-                      : course?.projects?.map((obj:any) => obj.name).join(", ")
-                  }
-                </TableCell>
-                <TableCell>
-                  <div>
-                    <Button
-                      variant="ghost"
-                      onClick={() => {
-                        form.setValue("name", course.name);
-                        setEditing({
-                          status: true,
-                          id: course.id
-                        })
-                        setDrawerVisibleForm(true)
-                      }}
-                    >
-                      <Edit2Icon size={14} />
-                    </Button>
+          {courses?.map((course: any) => (
+            <TableRow key={course.name}>
+              <TableCell>{course.name}</TableCell>
+              <TableCell>
+                {course?.projects?.length === 0
+                  ? "Sem projetos"
+                  : course?.projects?.map((obj: any) => obj.name).join(", ")}
+              </TableCell>
+              <TableCell>
+                <div>
+                  <Button
+                    variant="ghost"
+                    onClick={() => {
+                      form.setValue("name", course.name);
+                      setEditing({
+                        status: true,
+                        id: course.id,
+                      });
+                      setDrawerVisibleForm(true);
+                    }}
+                  >
+                    <Edit2Icon size={14} />
+                  </Button>
 
-                    <Button
-                      variant="ghost"
-                      onClick={() => {
-                        setAlertVisible(true)
-                        setEditing({
-                          status: false,
-                          id: course.id
-                        })
-                      }}
-                    >
-                      <Trash size={14} />
-                    </Button>
-
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))
-          }
+                  <Button
+                    variant="ghost"
+                    onClick={() => {
+                      setAlertVisible(true);
+                      setEditing({
+                        status: false,
+                        id: course.id,
+                      });
+                    }}
+                  >
+                    <Trash size={14} />
+                  </Button>
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
         </TableBody>
       </Table>
 
-      <AlertDialog
-        open={alertVisible}
-      >
+      <AlertDialog open={alertVisible}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Voce tem certeza que deseja excluir o curso?</AlertDialogTitle>
+            <AlertDialogTitle>
+              Voce tem certeza que deseja excluir o curso?
+            </AlertDialogTitle>
             <AlertDialogDescription>
               Esta acao nao pode ser revertida
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel
-              onClick={() => { setAlertVisible(false) }}
-            >Cancelar</AlertDialogCancel>
+              onClick={() => {
+                setAlertVisible(false);
+              }}
+            >
+              Cancelar
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={(e) => {
-                e.preventDefault()
-                onDelete()
+                e.preventDefault();
+                onDelete();
               }}
             >
               Sim, tenho certeza
@@ -282,16 +275,17 @@ export default function Courses() {
         </AlertDialogContent>
       </AlertDialog>
 
-      <Drawer
-        open={drawerVisibleForm}
-      >
+      <Drawer open={drawerVisibleForm}>
         <DrawerContent className="h-80% ">
           <DrawerHeader>
             <DrawerTitle>Adicione novo curso</DrawerTitle>
           </DrawerHeader>
-          <div className='h-max p-4'>
+          <div className="h-max p-4">
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-6'>
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="space-y-6"
+              >
                 <FormField
                   control={form.control}
                   name="name"
@@ -312,20 +306,28 @@ export default function Courses() {
 
                 <DrawerFooter className="flex flex-row justify-between m-0 p-0">
                   <DrawerClose>
-                    <Button variant="outline" onClick={() => { setDrawerVisibleForm(false) }}>Cancelar</Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setDrawerVisibleForm(false);
+                      }}
+                    >
+                      Cancelar
+                    </Button>
                   </DrawerClose>
                   <Button type="submit" disabled={loading}>
-                    {loading ? <LoadingSpinner className="text-dark" /> : "Enviar"}
+                    {loading ? (
+                      <LoadingSpinner className="text-dark" />
+                    ) : (
+                      "Enviar"
+                    )}
                   </Button>
                 </DrawerFooter>
               </form>
-
             </Form>
           </div>
-
         </DrawerContent>
       </Drawer>
-
     </div>
-  )
+  );
 }

@@ -1,22 +1,22 @@
 // pages/dashboard/page.tsx
-'use client'
-import ResponsiveMenu from '@/components/responsive-menu';
-import { LoadingSpinner } from '@/components/ui/loader';
-import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import withAuthorization from '@/components/with-authorization';
+"use client";
+import ResponsiveMenu from "@/components/responsive-menu";
+import { LoadingSpinner } from "@/components/ui/loader";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import withAuthorization from "@/components/with-authorization";
 import { collection, query, getDocs, where } from "firebase/firestore";
-import { db } from '@/config/firebase.config';
+import { db } from "@/config/firebase.config";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import { ArrowRight, FileClock, FilePlus, User } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+} from "@/components/ui/card";
+import { ArrowRight, FileClock, FilePlus, User } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const DashboardPage = () => {
   const [dashboardData, setDashboardData] = useState({
@@ -27,10 +27,9 @@ const DashboardPage = () => {
   const { data: session, status } = useSession();
   const router = useRouter();
 
-
   useEffect(() => {
     const getData = async () => {
-      if (!session) return; // Certifique-se de que session existe, mas não envolva o hook condicionalmente
+      if (!session) return;
 
       try {
         const files = query(collection(db, "files"));
@@ -38,7 +37,9 @@ const DashboardPage = () => {
 
         const filesSnapshot = await getDocs(files);
         const usersSnapshot = await getDocs(users);
-        let usersLenght = usersSnapshot.docs.filter((doc) => !doc.data().role).length;
+        let usersLenght = usersSnapshot.docs.filter(
+          (doc) => !doc.data().role
+        ).length;
 
         const newData = {
           qFiles: filesSnapshot.docs.length,
@@ -62,9 +63,7 @@ const DashboardPage = () => {
     getData();
   }, [session]);
 
-
-  if (status === 'loading' || !session) {
-
+  if (status === "loading" || !session) {
     return (
       <div className="w-full h-screen flex justify-center items-center">
         <LoadingSpinner />
@@ -81,9 +80,7 @@ const DashboardPage = () => {
               Painel geral
             </h2>
           </div>
-          <div className="flex-row sm:flex-col lg:flex-row justify-center h-full lg:space-x-2 sm:space-y-3 xs:space-y-3" >
-
-
+          <div className="flex-row sm:flex-col lg:flex-row justify-center h-full lg:space-x-2 sm:space-y-3 xs:space-y-3">
             <Card className="w-full">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">
@@ -92,15 +89,18 @@ const DashboardPage = () => {
                 <User size={18} />
               </CardHeader>
               <CardContent className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <div className="text-2xl font-bold">{dashboardData?.qUsers}</div>
+                <div className="text-2xl font-bold">
+                  {dashboardData?.qUsers}
+                </div>
                 <Button
                   variant={"ghost"}
-                  onClick={() => { router.push("/users") }}
+                  onClick={() => {
+                    router.push("/users");
+                  }}
                 >
                   Ver detalhes
                   <ArrowRight className="ml-5" size={16} />
                 </Button>
-
               </CardContent>
             </Card>
 
@@ -112,11 +112,13 @@ const DashboardPage = () => {
                 <FilePlus size={18} />
               </CardHeader>
               <CardContent className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <div className="text-2xl font-bold">{dashboardData?.qFiles}</div>
+                <div className="text-2xl font-bold">
+                  {dashboardData?.qFiles}
+                </div>
                 <Button
                   variant={"ghost"}
-                  onClick={() => { 
-                    router.push('/validation') ;
+                  onClick={() => {
+                    router.push("/validation");
                   }}
                 >
                   Ver detalhes
@@ -132,27 +134,25 @@ const DashboardPage = () => {
                 <FileClock size={18} />
               </CardHeader>
               <CardContent className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <div className="text-2xl font-bold">{dashboardData?.qPendingFiles}</div>
+                <div className="text-2xl font-bold">
+                  {dashboardData?.qPendingFiles}
+                </div>
                 <Button
                   variant={"ghost"}
-                  onClick={() => { 
-                    router.push('/validation?status=pending') ;
+                  onClick={() => {
+                    router.push("/validation?status=pending");
                   }}
                 >
                   Ver detalhes
                   <ArrowRight className="ml-5" size={16} />
-                  </Button>
+                </Button>
               </CardContent>
             </Card>
-
           </div>
-
         </div>
       </div>
     );
   }
-
-
 };
 
 export default withAuthorization(DashboardPage, ["admin"]);

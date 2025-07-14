@@ -1,29 +1,28 @@
 // pages/dashboard/page.tsx
-'use client'
-import ResponsiveMenu from '@/components/responsive-menu';
-import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
-import React, { useEffect, useState } from 'react';
+"use client";
+import ResponsiveMenu from "@/components/responsive-menu";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import React, { useEffect, useState } from "react";
 import { collection, query, where, getDocs } from "firebase/firestore";
-import { db, } from '@/config/firebase.config';
+import { db } from "@/config/firebase.config";
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
-import { LoadingSpinner } from '@/components/ui/loader';
-import { Progress } from "@/components/ui/progress"
+import { LoadingSpinner } from "@/components/ui/loader";
+import { Progress } from "@/components/ui/progress";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import withAuthorization from '@/components/with-authorization';
+} from "@/components/ui/card";
+import withAuthorization from "@/components/with-authorization";
 
 const ProgressPage = () => {
   const [myWorkload, setMyWorkload] = useState(0);
   const { data: session, status } = useSession();
   const { toast } = useToast();
-
 
   useEffect(() => {
     async function getUserInfo() {
@@ -32,7 +31,10 @@ const ProgressPage = () => {
       }
 
       try {
-        const q = query(collection(db, "files"), where("userId", "==", session.user.id));
+        const q = query(
+          collection(db, "files"),
+          where("userId", "==", session.user.id)
+        );
 
         const querySnapshot = await getDocs(q);
 
@@ -43,14 +45,11 @@ const ProgressPage = () => {
         let workloadCompleted = 0;
 
         querySnapshot.forEach((doc) => {
-
           const data = doc.data();
 
           if (data?.status === "approved") {
-
             workloadCompleted += parseInt(data?.workload);
           }
-
         });
 
         setMyWorkload(workloadCompleted);
@@ -59,13 +58,14 @@ const ProgressPage = () => {
       }
     }
     getUserInfo();
-
   }, [session, status]);
 
-
-  if (status === 'loading' || !session) {
-    return <div className="flex justify-center items-center h-screen">
-      <LoadingSpinner className="bg-dark" /></div>; // Mostra um carregando enquanto a sessão é verificada
+  if (status === "loading" || !session) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <LoadingSpinner className="bg-dark" />
+      </div>
+    );
   }
 
   return (
@@ -84,12 +84,13 @@ const ProgressPage = () => {
           </CardHeader>
           <CardContent>
             <div>
-              <p className="text-sm font-semibold mb-2">Carga horária concluída: {myWorkload}h</p>
+              <p className="text-sm font-semibold mb-2">
+                Carga horária concluída: {myWorkload}h
+              </p>
             </div>
             <Progress value={myWorkload} />
           </CardContent>
         </Card>
-
       </div>
     </div>
   );
