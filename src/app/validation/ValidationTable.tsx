@@ -86,9 +86,11 @@ const ValidationTable: React.FC<ValidationTableProps> = ({
               </TableCell>
               <TableCell>{file.workload}</TableCell>
               <TableCell>
-                <Badge variant={statusesColors[file.status] as any}>
-                  {statuses[file.status]}
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <Badge variant={statusesColors[file.status] as any}>
+                    {statuses[file.status]}
+                  </Badge>
+                </div>
               </TableCell>
               <TableCell className="flex">
                 <Tooltip>
@@ -136,15 +138,26 @@ const ValidationTable: React.FC<ValidationTableProps> = ({
                     <Button
                       variant="ghost"
                       onClick={() => {
+                        if (file.status !== "approved" || file.archived) return;
                         setCurrentFile(file);
                         setShowArchiveDialog(true);
                       }}
-                      disabled={file.status !== "approved"}
                     >
-                      <ArchiveIcon size={18} />
+                      <ArchiveIcon
+                        size={18}
+                        className={
+                          file.archived ? "text-blue-600" : "text-gray-400"
+                        }
+                      />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>Arquivar arquivo</TooltipContent>
+                  <TooltipContent>
+                    {file.status !== "approved" && !file.archived
+                      ? "Arquivo não aprovado"
+                      : file.archived
+                      ? "Arquivo já arquivado"
+                      : "Arquivar arquivo"}
+                  </TooltipContent>
                 </Tooltip>
               </TableCell>
             </TableRow>
