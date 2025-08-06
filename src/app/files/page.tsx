@@ -1,23 +1,29 @@
-'use client'
-import ResponsiveMenu from '@/components/responsive-menu';
-import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
-import React, { useEffect, useState } from 'react';
-import { collection, query, where, getDocs, addDoc, serverTimestamp } from "firebase/firestore";
-import { db, storage } from '@/config/firebase.config';
+"use client";
+import ResponsiveMenu from "@/components/responsive-menu";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import React, { useEffect, useState } from "react";
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  addDoc,
+  serverTimestamp,
+} from "firebase/firestore";
+import { db, storage } from "@/config/firebase.config";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { calculatePdfHash, getRandomFileName } from '@/lib/utils';
+import { calculatePdfHash, getRandomFileName } from "@/lib/utils";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useToast } from "@/hooks/use-toast";
-import { LoadingSpinner } from '@/components/ui/loader';
-import withAuthorization from '@/components/with-authorization';
+import { LoadingSpinner } from "@/components/ui/loader";
+import withAuthorization from "@/components/with-authorization";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import FilesTable from "@/components/files/FilesTable";
 import FileUploadDrawer from "@/components/files/FileUploadDrawer";
 import FileViewDrawer from "@/components/files/FileViewDrawer";
-
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Nome é obrigatório" }),
@@ -26,7 +32,9 @@ const formSchema = z.object({
   }),
   file: z.instanceof(globalThis.FileList).optional(),
   workload: z.string().min(1, { message: "Carga horaria é obrigatória" }),
-  completionDate: z.date({ required_error: "Data de realização é obrigatória" }),
+  completionDate: z.date({
+    required_error: "Data de realização é obrigatória",
+  }),
 });
 
 interface FileValidation {
@@ -42,17 +50,17 @@ interface FileValidation {
 }
 
 const statuses: any = {
-  "pending": "Pendente",
-  "rejected": "Rejeitado",
-  "approved": "Aprovado",
-  "processing": "Processando",
-}
+  pending: "Pendente",
+  rejected: "Rejeitado",
+  approved: "Aprovado",
+  processing: "Processando",
+};
 const statusesColors: any = {
-  "pending": "",
-  "rejected": "destructive",
-  "approved": "outline",
-  "processing": "secondary",
-}
+  pending: "",
+  rejected: "destructive",
+  approved: "outline",
+  processing: "secondary",
+};
 const FilesPage = () => {
   const [filesList, setFilesList] = useState<any>([]);
   const [loading, setLoading] = useState(true);
@@ -65,7 +73,7 @@ const FilesPage = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const { data: session, status } = useSession();
   const router = useRouter();
-  const { toast } = useToast()
+  const { toast } = useToast();
 
   // 1. Define your form.
   const form = useForm<z.infer<typeof formSchema>>({
@@ -105,15 +113,15 @@ const FilesPage = () => {
           variant: "destructive",
           title: "Ops! Nenhum arquivo selecionado.",
           description: "Selecione um arquivo ou tente novamente mais tarde.",
-        })
+        });
 
         return;
-      } {
-
+      }
+      {
         if (values.file?.length > 0) {
           let selectedFile = values.file[0];
           const hash = await calculatePdfHash(selectedFile);
-          
+
           const fileName = await getRandomFileName();
 
           const filesCollectionRef = collection(db, "files");
@@ -125,16 +133,20 @@ const FilesPage = () => {
             toast({
               variant: "destructive",
               title: "Ops! Ja existe um arquivo igual ao adicionado.",
-              description: "Adicione um novo arquivo ou tente novamente mais tarde.",
-            })
+              description:
+                "Adicione um novo arquivo ou tente novamente mais tarde.",
+            });
             setLoading(false);
             setDrawerVisibleForm(false);
             form.clearErrors();
-            form.reset()
+            form.reset();
             return;
           } else {
-
-            const pathFile = await uploadFile(selectedFile, fileName, session?.user.id);
+            const pathFile = await uploadFile(
+              selectedFile,
+              fileName,
+              session?.user.id
+            );
 
             const fileValidation: FileValidation = {
               name: values.name,
@@ -155,40 +167,34 @@ const FilesPage = () => {
             toast({
               title: "Atividade cadastrada com sucesso!",
               description: "Acompanhe o progresso na sua conta.",
-            })
+            });
 
             setLoading(false);
             setDrawerVisibleForm(false);
             form.clearErrors();
-            form.reset()
+            form.reset();
           }
         } else {
-
           toast({
             variant: "destructive",
             title: "Ops! Nenhum arquivo selecionado.",
             description: "Selecione um arquivo ou tente novamente mais tarde.",
-          })
+          });
         }
-
       }
-
     } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Erro ao registrar.",
         description: error,
-      })
+      });
       console.error("Erro ao registrar:", error);
       setLoading(false);
       setDrawerVisibleForm(false);
       form.clearErrors();
-      form.reset()
+      form.reset();
     }
   }
-  
-
-
 
   useEffect(() => {
     async function getAllFiles() {
@@ -198,12 +204,14 @@ const FilesPage = () => {
       }
 
       try {
-        const q = query(collection(db, "files"), where("userId", "==", session.user.id));
+        const q = query(
+          collection(db, "files"),
+          where("userId", "==", session.user.id)
+        );
 
         const querySnapshot = await getDocs(q);
 
         if (querySnapshot.empty) {
-
           setFilesList([]);
 
           setLoading(false);
@@ -223,12 +231,11 @@ const FilesPage = () => {
       }
     }
     getAllFiles();
-
   }, [session, status, drawerVisibleForm]);
 
   useEffect(() => {
     if (pdfPath === null || pdfPath === undefined) {
-      console.log('pdfPath está nulo ou indefinido:', pdfPath);
+      console.log("pdfPath está nulo ou indefinido:", pdfPath);
       return;
     }
 
@@ -237,23 +244,21 @@ const FilesPage = () => {
     getDownloadURL(pdfRef)
       .then((url) => {
         if (url === null || url === undefined) {
-          console.error("Erro ao obter a URL do PDF: a URL é nula ou indefinida");
+          console.error(
+            "Erro ao obter a URL do PDF: a URL é nula ou indefinida"
+          );
           return;
         }
-        console.log('URL do PDF obtida:', url);
+        console.log("URL do PDF obtida:", url);
         setPdfUrl(url);
         setPdfLoading(false);
       })
       .catch((error) => {
         console.error("Erro ao obter a URL do PDF:", error);
       });
-
   }, [drawerVisibleView, pdfPath]);
 
-
-
-
-  if (status === 'loading' || !session) {
+  if (status === "loading" || !session) {
     return (
       <div className="flex justify-center items-center h-screen">
         <LoadingSpinner className="bg-dark" />
@@ -261,46 +266,44 @@ const FilesPage = () => {
     );
   } else {
     return (
-      <TooltipProvider>
-        <div>
-          <ResponsiveMenu />
-          <div className="container mt-5">
-            <div className="flex flex-row justify-between items-center p-3 mb-10 border-b">
-              <h2 className="text-3xl font-semibold tracking-tight first:mt-0">
-                Atividades
-              </h2>
-              <FileUploadDrawer
-                drawerVisibleForm={drawerVisibleForm}
-                setDrawerVisibleForm={setDrawerVisibleForm}
-                form={form}
-                onSubmit={onSubmit}
-                loading={loading}
-              />
-            </div>
-            <FilesTable
-              filesList={filesList}
+      <div>
+        <ResponsiveMenu />
+        <div className="container mt-5">
+          <div className="flex flex-row justify-between items-center p-3 mb-10 border-b">
+            <h2 className="text-3xl font-semibold tracking-tight first:mt-0">
+              Atividades
+            </h2>
+            <FileUploadDrawer
+              drawerVisibleForm={drawerVisibleForm}
+              setDrawerVisibleForm={setDrawerVisibleForm}
+              form={form}
+              onSubmit={onSubmit}
               loading={loading}
-              setDrawerVisibleView={setDrawerVisibleView}
-              setPdfPath={setPdfPath}
-              drawerVisibleView={drawerVisibleView}
-              pdfUrl={pdfUrl}
-              pdfLoading={pdfLoading}
-              setPdfLoading={setPdfLoading}
-              setPdfUrl={setPdfUrl}
-              setFilesList={setFilesList}
-            />
-            <FileViewDrawer
-              drawerVisibleView={drawerVisibleView}
-              setDrawerVisibleView={setDrawerVisibleView}
-              pdfUrl={pdfUrl}
-              pdfLoading={pdfLoading}
-              setPdfLoading={setPdfLoading}
             />
           </div>
+          <FilesTable
+            filesList={filesList}
+            loading={loading}
+            setDrawerVisibleView={setDrawerVisibleView}
+            setPdfPath={setPdfPath}
+            drawerVisibleView={drawerVisibleView}
+            pdfUrl={pdfUrl}
+            pdfLoading={pdfLoading}
+            setPdfLoading={setPdfLoading}
+            setPdfUrl={setPdfUrl}
+            setFilesList={setFilesList}
+          />
+          <FileViewDrawer
+            drawerVisibleView={drawerVisibleView}
+            setDrawerVisibleView={setDrawerVisibleView}
+            pdfUrl={pdfUrl}
+            pdfLoading={pdfLoading}
+            setPdfLoading={setPdfLoading}
+          />
         </div>
-      </TooltipProvider>
+      </div>
     );
   }
 };
 
-export default withAuthorization(FilesPage, ["common"] );
+export default withAuthorization(FilesPage, ["common"]);
