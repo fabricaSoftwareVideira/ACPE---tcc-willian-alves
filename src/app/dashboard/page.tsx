@@ -15,14 +15,20 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { ArrowRight, FileClock, FilePlus, User } from "lucide-react";
+import { ArrowRight, FileClock, FilePlus, User, Archive } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const DashboardPage = () => {
-  const [dashboardData, setDashboardData] = useState({
+  const [dashboardData, setDashboardData] = useState<{
+    qFiles: number;
+    qUsers: number;
+    qPendingFiles: number;
+    qArchivedFiles: number;
+  }>({
     qFiles: 0,
     qUsers: 0,
     qPendingFiles: 0,
+    qArchivedFiles: 0,
   });
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -32,31 +38,41 @@ const DashboardPage = () => {
       if (!session) return;
 
       try {
-        const files = query(collection(db, "files"));
-        const users = query(collection(db, "users"));
+        // Fetch all data in parallel with optimized queries
+        const [filesSnapshot, usersSnapshot, pendingFilesSnapshot] =
+          await Promise.all([
+            getDocs(collection(db, "files")),
+            getDocs(collection(db, "users")),
+            getDocs(
+              query(collection(db, "files"), where("status", "==", "pending"))
+            ),
+          ]);
 
-        const filesSnapshot = await getDocs(files);
-        const usersSnapshot = await getDocs(users);
-        let usersLenght = usersSnapshot.docs.filter(
+        // Count users without role (filter in JS since Firestore can't query missing fields)
+        const usersWithoutRole = usersSnapshot.docs.filter(
           (doc) => !doc.data().role
         ).length;
 
-        const newData = {
-          qFiles: filesSnapshot.docs.length,
-          qUsers: usersLenght,
-          qPendingFiles: 0,
-        };
+        // Count all files that are not archived
+        const allFilesNotArchived = filesSnapshot.docs.filter(
+          (doc) => !doc.data().archived
+        ).length;
 
-        filesSnapshot.forEach((doc) => {
-          const fileData = doc.data();
-          if (fileData.status === "pending") {
-            newData.qPendingFiles++;
-          }
+        // Count pending files that are not archived
+        const pendingNotArchived = pendingFilesSnapshot.docs.filter(
+          (doc) => !doc.data().archived
+        ).length;
+
+        setDashboardData({
+          qFiles: allFilesNotArchived,
+          qUsers: usersWithoutRole,
+          qPendingFiles: pendingNotArchived,
+          qArchivedFiles: filesSnapshot.docs.filter(
+            (doc) => doc.data().archived
+          ).length,
         });
-
-        setDashboardData(newData);
       } catch (error) {
-        console.error("Erro ao obter lista de arquivos:", error);
+        console.error("Erro ao obter dados do dashboard:", error);
       }
     };
 
@@ -143,7 +159,29 @@ const DashboardPage = () => {
                     router.push("/validation?status=pending");
                   }}
                 >
-                  Ver detalhes
+                  Ver pendentes
+                  <ArrowRight className="ml-5" size={16} />
+                </Button>
+              </CardContent>
+            </Card>
+            <Card className="w-full">
+              <CardHeader className="flex flex-row items-center justify-between space-y-1 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Arquivos Arquivados
+                </CardTitle>
+                <Archive size={18} />
+              </CardHeader>
+              <CardContent className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <div className="text-2xl font-bold">
+                  {dashboardData.qArchivedFiles}
+                </div>
+                <Button
+                  variant={"ghost"}
+                  onClick={() => {
+                    router.push("/validation?status=archived");
+                  }}
+                >
+                  Ver arquivados
                   <ArrowRight className="ml-5" size={16} />
                 </Button>
               </CardContent>

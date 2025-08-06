@@ -10,8 +10,12 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { FileBadge, FileDownIcon, ArchiveIcon } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { LoadingSpinner } from '@/components/ui/loader';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { LoadingSpinner } from "@/components/ui/loader";
 
 interface ValidationTableProps {
   filteredFilesList: any[];
@@ -135,6 +139,7 @@ const ValidationTable: React.FC<ValidationTableProps> = ({
                         setCurrentFile(file);
                         setShowArchiveDialog(true);
                       }}
+                      disabled={file.status !== "approved"}
                     >
                       <ArchiveIcon size={18} />
                     </Button>
@@ -156,4 +161,4 @@ const ValidationTable: React.FC<ValidationTableProps> = ({
   );
 };
 
-export default React.memo(ValidationTable); 
+export default React.memo(ValidationTable);

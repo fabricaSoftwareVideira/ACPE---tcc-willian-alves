@@ -1,22 +1,12 @@
 "use client";
 import ResponsiveMenu from "@/components/responsive-menu";
-import {
-  TooltipProvider,
-} from "@/components/ui/tooltip";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useMemo, useState } from "react";
-import {
-  collection,
-  query,
-  getDocs,
-  doc,
-  setDoc,
-} from "firebase/firestore";
+import { collection, query, getDocs, doc, setDoc } from "firebase/firestore";
 import { db, storage } from "@/config/firebase.config";
-import {
-  FilterIcon
-} from "lucide-react";
+import { FilterIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -33,10 +23,10 @@ import { ref, getDownloadURL } from "firebase/storage";
 import { LoadingSpinner } from "@/components/ui/loader";
 import withAuthorization from "@/components/with-authorization";
 import { useToast } from "@/hooks/use-toast";
-import ValidationFilters from './ValidationFilters';
-import ValidationTable from './ValidationTable';
-import ValidationDrawer from './ValidationDrawer';
-import ValidationArchiveDialog from './ValidationArchiveDialog';
+import ValidationFilters from "./ValidationFilters";
+import ValidationTable from "./ValidationTable";
+import ValidationDrawer from "./ValidationDrawer";
+import ValidationArchiveDialog from "./ValidationArchiveDialog";
 
 interface Filters {
   status: string;
@@ -99,7 +89,7 @@ const ValidationPage = () => {
   });
   const [drawerVisibleView, setDrawerVisibleView] = useState(false);
   const [pdfUrl, setPdfUrl] = useState("");
-  const [pdfPath, setPdfPath] = useState<string>(""); 
+  const [pdfPath, setPdfPath] = useState<string>("");
   const [showArchiveDialog, setShowArchiveDialog] = useState(false);
   const { data: session, status } = useSession();
   const router: any = useRouter();
@@ -110,8 +100,22 @@ const ValidationPage = () => {
       const queryParams = new URLSearchParams(window.location.search);
       const statusParam = queryParams.get("status");
       if (statusParam) {
-        handleFilterChange("status", statusParam);
-        setFilters((prevFilters) => ({ ...prevFilters, status: statusParam }));
+        setFiltersVisible(true);
+        if (statusParam === "archived") {
+          handleFilterChange("status", "all");
+          handleFilterChange("includeArchived", true);
+          setFilters((prevFilters) => ({
+            ...prevFilters,
+            status: "all",
+            includeArchived: true,
+          }));
+        } else {
+          handleFilterChange("status", statusParam);
+          setFilters((prevFilters) => ({
+            ...prevFilters,
+            status: statusParam,
+          }));
+        }
       }
     }
   }, []);
@@ -212,7 +216,9 @@ const ValidationPage = () => {
     }
 
     if (!filters.includeArchived) {
-      filteredList = filteredList.filter((f: any) => f.archived === false || f.archived === undefined);
+      filteredList = filteredList.filter(
+        (f: any) => f.archived === false || f.archived === undefined
+      );
     }
 
     return filteredList;
@@ -225,7 +231,7 @@ const ValidationPage = () => {
   useEffect(() => {
     if (!pdfPath) {
       setPdfUrl("");
-      return; 
+      return;
     }
 
     setPdfLoading(true);
