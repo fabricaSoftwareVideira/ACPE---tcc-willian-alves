@@ -30,7 +30,7 @@ const formSchema = z.object({
   description: z.string().min(2, {
     message: "Descricao é obrigatória",
   }),
-  file: z.instanceof(globalThis.FileList).optional(),
+  file: z.any().optional(),
   workload: z.string().min(1, { message: "Carga horaria é obrigatória" }),
   completionDate: z.date({
     required_error: "Data de realização é obrigatória",
