@@ -71,20 +71,6 @@ controlecc/
 - Administradores podem gerenciar usuários e aprovar arquivos.
 - Usuários podem enviar arquivos e acompanhar seu progresso.
 
-## Contribuindo
+## Backup
 
-Contribuições são bem-vindas! Para mudanças maiores, por favor abra uma issue primeiro para discutir o que você gostaria de modificar.
-
-1. Faça um fork do repositório
-2. Crie uma branch para sua feature (`git checkout -b feature/SuaFeature`)
-3. Faça commit das suas alterações (`git commit -m 'Adiciona nova feature'`)
-4. Faça push para a branch (`git push origin feature/SuaFeature`)
-5. Abra um pull request
-
-## Licença
-
-[MIT](LICENSE)
-
-## Contato
-
-Para dúvidas ou suporte, entre em contato pelo e-mail: [seu-email@exemplo.com]
+[Arquivos para realizar restore](https://drive.google.com/file/d/1d5EvnBFBn5dOQumzK913sythz-j2Jz5R/view?usp=sharing)
